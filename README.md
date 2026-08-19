@@ -242,4 +242,17 @@ PromptNest 使用 [MIT License](LICENSE)。
 
 ---
 
-如果 PromptNest 对你有帮助，欢迎给项目一个 ⭐ Star。
+## ☕ 支持项目
+
+如果 PromptNest 对你有帮助，欢迎给项目一个 ⭐ **Star**。
+
+如果你愿意支持项目持续维护、功能优化和后续版本更新，也可以请作者喝杯咖啡 ☕  
+你的支持会成为继续完善 PromptNest 的动力，感谢每一份鼓励。
+
+<p align="center">
+  <img src="docs/images/4.jpg" width="280" alt="请作者喝杯咖啡">
+</p>
+
+<p align="center">
+  <sub>赞助完全自愿，不影响 PromptNest 的开源使用与功能。</sub>
+</p>
