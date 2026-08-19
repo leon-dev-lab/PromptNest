@@ -1,0 +1,33 @@
+# Frontend dependencies / build
+frontend/node_modules/
+frontend/dist/
+
+# Wails build output
+build/bin/
+build/darwin/
+build/linux/
+release/
+
+# Local app data / user content
+prompts.json
+settings.json
+*.log
+*.tmp
+
+# Secrets
+.env
+.env.*
+api-key.dat
+*.key
+*.pem
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Go test / coverage
+coverage.out
+*.test
