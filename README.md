@@ -1,6 +1,6 @@
-# PromptNest
+# PromptNest AI · 提示巢
 
-> 一个轻量、精致、以本地数据为核心的 **AI 提示词助手（Prompt Library）**。  
+> 一个轻量、精致、以本地数据为核心的 **AI 提示词管理助手（Prompt Library）**。  
 > 用于收藏、整理、检索、分类和快速复用你常用的 AI 提示词。
 
 **作者 / GitHub：** https://github.com/leon-dev-lab  
