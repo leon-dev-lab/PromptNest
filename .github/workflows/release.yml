@@ -4,60 +4,118 @@ on:
   push:
     tags:
       - "v*"
+
   workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号，例如 v2.6.1；只测试构建可填 dev"
+        required: true
+        default: "dev"
+        type: string
+      publish_release:
+        description: "是否把手动构建结果发布到 GitHub Releases"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
 
 env:
-  NODE_OPTIONS: --max-old-space-size=4096
+  NODE_OPTIONS: "--max-old-space-size=4096"
+  WAILS_VERSION: "v2.14.0"
+  VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
 
 jobs:
   windows:
-    name: Windows x64
+    name: Windows ${{ matrix.name }}
     runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: x64
+            platform: windows/amd64
+            suffix: win-x64
+          - name: ARM64
+            platform: windows/arm64
+            suffix: win-arm64
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"
+          cache: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
+          package-manager-cache: false
 
-      - name: Install Wails
+      - name: Restore Go modules
         shell: pwsh
         run: |
-          go install github.com/wailsapp/wails/v2/cmd/wails@v2.14.0
+          go mod download
+
+      - name: Install frontend dependencies
+        shell: pwsh
+        run: |
+          Push-Location frontend
+          npm install
+          Pop-Location
+
+      - name: Prepare frontend embed placeholder
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "frontend\dist" | Out-Null
+          if (-not (Test-Path "frontend\dist\index.html")) {
+            '<!doctype html><html><body>build placeholder</body></html>' |
+              Set-Content -Encoding UTF8 "frontend\dist\index.html"
+          }
 
       - name: Build Windows
         shell: pwsh
         run: |
-          wails build -clean -platform windows/amd64 -o PromptNest.exe
+          go run "github.com/wailsapp/wails/v2/cmd/wails@${{ env.WAILS_VERSION }}" build `
+            -clean `
+            -platform "${{ matrix.platform }}" `
+            -o PromptNest.exe
 
       - name: Package Windows
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
-          $name = "PromptNest-$tag-win-x64"
-          New-Item -ItemType Directory -Force -Path "release\$name"
-          Copy-Item "build\bin\PromptNest.exe" "release\$name\PromptNest.exe"
-          Copy-Item "README.md" "release\$name\README.md"
-          Copy-Item "LICENSE" "release\$name\LICENSE"
-          Compress-Archive -Path "release\$name\*" -DestinationPath "release\$name.zip"
+          $Version = "${{ env.VERSION }}"
+          $Suffix = "${{ matrix.suffix }}"
+          $BaseName = "PromptNest-$Version-$Suffix"
 
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+          New-Item -ItemType Directory -Force -Path "release" | Out-Null
+          New-Item -ItemType Directory -Force -Path "release\$BaseName" | Out-Null
+
+          Copy-Item "build\bin\PromptNest.exe" "release\$BaseName.exe"
+          Copy-Item "build\bin\PromptNest.exe" "release\$BaseName\PromptNest.exe"
+          Copy-Item "README.md" "release\$BaseName\README.md"
+          Copy-Item "LICENSE" "release\$BaseName\LICENSE"
+
+          Compress-Archive `
+            -Path "release\$BaseName\*" `
+            -DestinationPath "release\$BaseName.zip" `
+            -Force
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v7
         with:
-          name: windows-x64
-          path: release/*.zip
-
+          name: ${{ matrix.suffix }}
+          path: |
+            release/*.exe
+            release/*.zip
+          if-no-files-found: error
+          retention-days: 7
 
   macos:
     name: macOS Universal
@@ -65,30 +123,47 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"
+          cache: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
+          package-manager-cache: false
 
-      - name: Install Wails
+      - name: Restore Go modules
         run: |
-          go install github.com/wailsapp/wails/v2/cmd/wails@v2.14.0
+          go mod download
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Prepare frontend embed placeholder
+        run: |
+          mkdir -p frontend/dist
+          if [ ! -f frontend/dist/index.html ]; then
+            printf '%s\n' '<!doctype html><html><body>build placeholder</body></html>' \
+              > frontend/dist/index.html
+          fi
 
       - name: Build macOS Universal
         run: |
-          wails build -clean -platform darwin/universal -o PromptNest
+          go run "github.com/wailsapp/wails/v2/cmd/wails@${WAILS_VERSION}" build \
+            -clean \
+            -platform darwin/universal \
+            -o PromptNest
 
       - name: Package macOS
         run: |
-          TAG="${{ github.ref_name }}"
-          NAME="PromptNest-${TAG}-mac-universal"
+          BASE_NAME="PromptNest-${VERSION}-mac-universal"
           mkdir -p release
 
           ditto \
@@ -97,14 +172,15 @@ jobs:
             --sequesterRsrc \
             --keepParent \
             "build/bin/PromptNest.app" \
-            "release/${NAME}.zip"
+            "release/${BASE_NAME}.zip"
 
       - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mac-universal
           path: release/*.zip
-
+          if-no-files-found: error
+          retention-days: 7
 
   release:
     name: Publish Release
@@ -112,30 +188,44 @@ jobs:
       - windows
       - macos
 
+    if: >
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish_release)
+
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v5
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
         with:
           path: release-assets
           merge-multiple: true
+
+      - name: Generate SHA256
+        shell: bash
+        run: |
+          cd release-assets
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
 
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          TAG="${GITHUB_REF_NAME}"
+          TAG="${VERSION}"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" release-assets/*.zip --clobber
+            echo "Release $TAG already exists. Updating assets..."
+            gh release upload "$TAG" release-assets/* --clobber
           else
+            echo "Creating Release $TAG..."
             gh release create "$TAG" \
-              release-assets/*.zip \
+              release-assets/* \
+              --target "$GITHUB_SHA" \
               --title "PromptNest $TAG" \
               --generate-notes
           fi
