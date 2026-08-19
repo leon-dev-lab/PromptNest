@@ -1,0 +1,141 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
+
+jobs:
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install Wails
+        shell: pwsh
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@v2.14.0
+
+      - name: Build Windows
+        shell: pwsh
+        run: |
+          wails build -clean -platform windows/amd64 -o PromptNest.exe
+
+      - name: Package Windows
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $name = "PromptNest-$tag-win-x64"
+          New-Item -ItemType Directory -Force -Path "release\$name"
+          Copy-Item "build\bin\PromptNest.exe" "release\$name\PromptNest.exe"
+          Copy-Item "README.md" "release\$name\README.md"
+          Copy-Item "LICENSE" "release\$name\LICENSE"
+          Compress-Archive -Path "release\$name\*" -DestinationPath "release\$name.zip"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: release/*.zip
+
+
+  macos:
+    name: macOS Universal
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install Wails
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@v2.14.0
+
+      - name: Build macOS Universal
+        run: |
+          wails build -clean -platform darwin/universal -o PromptNest
+
+      - name: Package macOS
+        run: |
+          TAG="${{ github.ref_name }}"
+          NAME="PromptNest-${TAG}-mac-universal"
+          mkdir -p release
+
+          ditto \
+            -c \
+            -k \
+            --sequesterRsrc \
+            --keepParent \
+            "build/bin/PromptNest.app" \
+            "release/${NAME}.zip"
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-universal
+          path: release/*.zip
+
+
+  release:
+    name: Publish Release
+    needs:
+      - windows
+      - macos
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-assets/*.zip --clobber
+          else
+            gh release create "$TAG" \
+              release-assets/*.zip \
+              --title "PromptNest $TAG" \
+              --generate-notes
+          fi
