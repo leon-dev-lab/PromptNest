@@ -7,6 +7,20 @@
 **项目仓库：** https://github.com/leon-dev-lab/PromptNest  
 **许可证：** [MIT License](LICENSE)
 
+
+## 界面预览
+
+<p align="center">
+  <img src="docs/images/0.png" width="49%" alt="PromptNest 项目封面">
+  <img src="docs/images/1.png" width="49%" alt="PromptNest 主界面">
+</p>
+
+<p align="center">
+  <img src="docs/images/2.png" width="49%" alt="PromptNest 提示词编辑器">
+  <img src="docs/images/3.png" width="49%" alt="PromptNest 分类与标签管理">
+</p>
+
+
 PromptNest 不是 AI 聊天客户端，也不绑定某个模型或平台。它更像一个专门为 Prompt 设计的本地知识库：把零散在记事本、聊天记录和各种文档里的提示词集中管理，需要时快速搜索、复制和复用。
 
 界面采用自定义 **Warm Editorial Workspace** 视觉风格，不依赖大型 UI 组件库；提示词数据默认保存在本机，并支持自定义数据目录。
