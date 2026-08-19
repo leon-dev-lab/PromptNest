@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableExtensions
-cd /d "%~dp0"
+for %%I in ("%~dp0..\..") do set "ROOT=%%~fI"
+cd /d "%ROOT%"
 set "WAILS_VERSION=v2.14.0"
 
 echo ================================================
@@ -16,7 +17,7 @@ if not defined NPM_VER (
   exit /b 1
 )
 
-pushd frontend
+pushd "%ROOT%\frontend"
 if not exist node_modules (
   echo Installing frontend dependencies...
   call npm.cmd install
@@ -24,10 +25,10 @@ if not exist node_modules (
 )
 popd
 
-rem main.go embeds frontend/dist. A fresh Git clone may not have the ignored dist directory yet.
-if not exist "%~dp0frontend\dist" mkdir "%~dp0frontend\dist" >nul 2>nul
-if not exist "%~dp0frontend\dist\index.html" (
-  > "%~dp0frontend\dist\index.html" echo ^<!doctype html^>^<html^>^<body^>dev placeholder^</body^>^</html^>
+rem main.go embeds frontend/dist. A fresh clone may not have generated frontend output yet.
+if not exist "%ROOT%\frontend\dist" mkdir "%ROOT%\frontend\dist" >nul 2>nul
+if not exist "%ROOT%\frontend\dist\index.html" (
+  > "%ROOT%\frontend\dist\index.html" echo ^<!doctype html^>^<html^>^<body^>dev placeholder^</body^>^</html^>
 )
 
 echo Starting Wails dev mode. The desktop window should open automatically after compilation.

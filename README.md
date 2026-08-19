@@ -130,7 +130,7 @@ Run.bat
 开发模式：
 
 ```bat
-Dev.bat
+scripts\windows\Dev.bat
 ```
 
 ## 🔨 构建 Windows x64
@@ -148,7 +148,7 @@ build\bin\PromptNest.exe
 ## 📦 生成 GitHub Release ZIP
 
 ```bat
-Package_Release.bat
+scripts\windows\Package_Release.bat
 ```
 
 成功后会在 `release` 目录生成 Windows x64 发布包，例如：
@@ -179,6 +179,39 @@ v2.7.0
 
 构建产物可自动上传到 GitHub Releases。
 
+
+## 🗂 项目结构
+
+仓库根目录只保留入口、核心 Go 源码和常用项目文件；辅助脚本、截图与版本文档分别归档，避免首页文件列表过长。
+
+```text
+PromptNest/
+├─ .github/
+│  ├─ workflows/          # GitHub Actions 多平台构建
+│  └─ CONTRIBUTING.md     # 贡献指南
+├─ build/windows/         # Windows 图标等 Wails 构建资源
+├─ docs/
+│  ├─ images/             # README 界面截图
+│  ├─ releases/           # 历史版本说明
+│  └─ CHANGELOG.md
+├─ frontend/              # Vue 3 + Vite 前端
+├─ scripts/windows/       # Windows 开发、检查与发布辅助脚本
+├─ app.go                 # Wails 应用桥接与业务入口
+├─ datastore.go           # 本地数据存储
+├─ models.go              # 数据模型
+├─ tray_*.go              # 系统托盘实现
+├─ main.go                # 程序入口
+├─ Build_EXE.bat          # Windows x64 一键构建入口
+├─ Run.bat                # Windows 一键运行入口
+├─ go.mod
+├─ wails.json
+├─ README.md
+└─ LICENSE
+```
+
+Windows 的高级辅助脚本说明见：[scripts/windows/README.md](scripts/windows/README.md)。
+版本记录见：[docs/CHANGELOG.md](docs/CHANGELOG.md)。
+
 ## 💾 数据与隐私
 
 Windows 默认数据文件位置：
@@ -199,7 +232,7 @@ PromptNest 的提示词库默认保存在本地，不提供云同步，也不会
 
 欢迎提交 Issue、功能建议和 Pull Request。
 
-详细说明请查看：[CONTRIBUTING.md](CONTRIBUTING.md)
+详细说明请查看：[贡献指南](.github/CONTRIBUTING.md)
 
 ## 📄 开源许可
 

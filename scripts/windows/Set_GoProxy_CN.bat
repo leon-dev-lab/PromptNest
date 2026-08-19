@@ -1,5 +1,7 @@
 @echo off
-setlocal
+setlocal EnableExtensions
+for %%I in ("%~dp0..\..") do set "ROOT=%%~fI"
+cd /d "%ROOT%"
 echo This sets GOPROXY globally for your current Windows user:
 echo   https://goproxy.cn,direct
 echo.

@@ -12,7 +12,7 @@
 Windows 可直接运行：
 
 ```bat
-Dev.bat
+scripts\windows\Dev.bat
 ```
 
 生产构建：

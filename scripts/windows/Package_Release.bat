@@ -1,10 +1,11 @@
 @echo off
 setlocal EnableExtensions
-cd /d "%~dp0"
+for %%I in ("%~dp0..\..") do set "ROOT=%%~fI"
+cd /d "%ROOT%"
 
 set "VERSION=2.6.0"
-set "APP_EXE=%~dp0build\bin\PromptNest.exe"
-set "RELEASE_ROOT=%~dp0release"
+set "APP_EXE=%ROOT%\build\bin\PromptNest.exe"
+set "RELEASE_ROOT=%ROOT%\release"
 set "STAGE=%RELEASE_ROOT%\PromptNest-v%VERSION%-win-x64"
 set "ZIP_FILE=%RELEASE_ROOT%\PromptNest-v%VERSION%-win-x64.zip"
 
@@ -13,7 +14,7 @@ echo  PromptNest v%VERSION% - GitHub Release Package
 echo ================================================
 echo.
 
-call "%~dp0Build_EXE.bat"
+call "%ROOT%\Build_EXE.bat"
 if errorlevel 1 goto :failed
 if not exist "%APP_EXE%" goto :missing
 
@@ -22,7 +23,7 @@ if exist "%ZIP_FILE%" del /q "%ZIP_FILE%"
 mkdir "%STAGE%" >nul 2>nul
 
 copy /y "%APP_EXE%" "%STAGE%\PromptNest.exe" >nul
-copy /y "%~dp0LICENSE" "%STAGE%\LICENSE.txt" >nul
+copy /y "%ROOT%\LICENSE" "%STAGE%\LICENSE.txt" >nul
 
 > "%STAGE%\README.txt" echo PromptNest v%VERSION%
 >>"%STAGE%\README.txt" echo.
