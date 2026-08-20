@@ -1,7 +1,7 @@
 # PromptNest
 
-> 一个轻量、精致、以本地数据为核心的 **AI 提示词助手（Prompt Library）**。  
-> 用于收藏、整理、检索、分类和快速复用你常用的 AI 提示词，基于 **Go + Wails + Vue 3** 开发。
+> 一个轻量级、精致、以本地数据为核心的 **AI 提示词管理助手（Prompt Library）**。  
+> 用于收藏、整理、检索、分类和快速复用你常用的 AI 提示词助手。
 
 **作者 / GitHub：** https://github.com/leon-dev-lab  
 **项目仓库：** https://github.com/leon-dev-lab/PromptNest  
@@ -144,41 +144,6 @@ Build_EXE.bat
 ```text
 build\bin\PromptNest.exe
 ```
-
-## 📦 生成 GitHub Release ZIP
-
-```bat
-scripts\windows\Package_Release.bat
-```
-
-成功后会在 `release` 目录生成 Windows x64 发布包，例如：
-
-```text
-release\PromptNest-v2.6.0-win-x64.zip
-```
-
-该文件可以直接上传到 GitHub Releases。
-
-## 🤖 GitHub Actions 自动构建
-
-仓库包含 GitHub Actions 工作流，可自动构建：
-
-```text
-Windows x64
-Windows ARM64
-macOS Universal
-```
-
-推送类似下面的版本 Tag 后，可以触发正式版本构建：
-
-```text
-v2.6.0
-v2.6.1
-v2.7.0
-```
-
-构建产物可自动上传到 GitHub Releases。
-
 
 ## 🗂 项目结构
 
